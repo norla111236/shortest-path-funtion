@@ -1,0 +1,209 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit4.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+#define init 200
+
+TForm4 *Form4;
+int ** w;      //cost matrix
+int n;         //n * n
+int visited[init];
+int dist[init];
+int e[init][init];
+
+// --My function library--start--line--
+
+// dynamically generate weight matrix
+void generate_graph(int n, int r, int max, int Large){
+	 if(w!=NULL){       //if w has been defined prevously, we delete it.
+		int **s = w;
+		for (int i = 0; i < n; i++) {
+			delete s[i];
+		}
+		delete s;
+	 }
+	 w = new int * [n];
+	 for (int i = 0; i < n; i++) {
+		  w[i] = new int [n];
+	 }
+	 for (int i =0; i < n; i++) {
+		  for (int j = 0; j < n; j++) {
+			  w[i][j] = rand()%r +1;   //randomly generate weight
+			  if(w[i][j] > max){
+				   w[i][j] = Large;
+			  }
+		  }
+          w[i][i] = Large;
+	 }
+}
+
+void String_grid_matrix(){
+
+	Form4->StringGrid1->RowCount = n+1;
+	Form4->StringGrid1->ColCount = n+1;
+
+	for (int i = 1; i <= n+1; i++) {      //x¶bªì©l­È
+		 Form4->StringGrid1->Cells[i][0] =  i;
+	}
+	for (int i = 1; i <= n+1; i++) {     //y¶bªì©l­È
+		 Form4->StringGrid1->Cells[0][i] = i;
+	}
+	for (int i = 0; i < n; i++) {
+		  String str = "";
+		  for (int j = 0; j < n; j++) {
+			 Form4->StringGrid1->Cells[j+1][i+1] = IntToStr(w[i][j]);
+		  }
+
+	}
+}
+
+
+//SSAD
+void SSAD(int s){           //s:start vertex
+    s-=1;
+
+	Form4->StringGrid2->RowCount = n+1;
+	Form4->StringGrid2->ColCount = n+2; //add one more column for u selected
+
+	// use dijkstra  to find SSAD
+	// --initialize--
+	for(int i=0;i<n;i++){
+		visited[i]=0;
+	}
+	for(int i=0;i<n;i++){
+		dist[i]=w[s][i];
+	}
+	visited[s] = 1;  // vertex s is being visited.
+	dist[s] = 0;
+	for (int i = 0; i < n; i++) {
+		 Form4->StringGrid2->Cells[i+1][1] = dist[i];
+	}
+	// --initialize--
+	int min_distance = 99999;
+	int count = 1;
+	int nextnode;
+	while(count<n) {
+	  for(int i=0;i<n;i++)
+		 if(dist[i] <= min_distance && visited[i]==0) {
+			min_distance = dist[i];
+			nextnode = i;
+	  }
+	  visited[nextnode]=1;	//marked as visited
+	  for(int i=0;i<n;i++){
+		  if(visited[i]==0){
+			if(min_distance + w[nextnode][i]<dist[i]) {
+			 dist[i]=min_distance+w[nextnode][i];
+			}
+		  }
+	  }
+	  count++;
+	  
+	  for (int i = 0; i < n; i++) {
+			Form4->StringGrid2->Cells[i+1][count] = dist[i];
+	  }
+   }
+   //test case
+//	for (int i = 0; i < n; i++) {
+//	Form4->Memo3->Lines->Add(dist[i]);  }
+   //	
+	for (int i = 1; i <= n+1; i++) {      //x¶bªì©l­È
+		 if(i==n+1){
+//			Form4->StringGrid2->Cells[i][0] = "u selected";
+		 }
+		 else{Form4->StringGrid2->Cells[i][0] = "dict[" +IntToStr(i) + "]"; }
+	}
+	for (int i = 1; i <= n+1; i++) {     //y¶bªì©l­È
+		 if(i==1){
+			Form4->StringGrid2->Cells[0][i] = "init";
+		 }else{
+			Form4->StringGrid2->Cells[0][i] =  i-1;
+
+		 }
+	}
+
+}
+
+void floyd_warshall(){
+	for (int i = 0; i < n; i++) {
+	   for (int j = 0; j < n; j++) {
+		   if(w[i][j] == 99999){
+			  e[i][j] = 0;
+		   }else{e[i][j] = w[i][j];      //A0
+		   }                               			
+	   }	
+	}
+	for (int i = 0; i < n; i++) {
+	for (int j = 0; j < n; j++) {
+        	Form4->Memo4->Lines->Add(e[i][j]);
+	}  }
+
+	for(int k=1;k<n+1;k++){        //A1,A2,A3,...,Ak
+		for (int i=1;i<n+1;i++){
+			for (int j=1;j<n+1;j++){
+				if (e[i][j] > e[i][k]+e[k][j]){
+					e[i][j] = e[i][k]+e[k][j];
+				}
+			}
+		}
+	}
+	// print
+	Form4->StringGrid3->RowCount = n+1;
+	Form4->StringGrid3->ColCount = n+1;
+
+	for (int i = 1; i <= n+1; i++) {      //x¶bªì©l­È
+		 Form4->StringGrid3->Cells[i][0] =  i;
+	}
+	for (int i = 1; i <= n+1; i++) {     //y¶bªì©l­È
+		 Form4->StringGrid3->Cells[0][i] = i;
+	}
+	for (int i = 1; i <= n; i++) {
+		  for (int j = 1; j <= n; j++) {
+			 Form4->StringGrid3->Cells[j][i] = IntToStr(e[i][j]);
+		  }
+
+	}
+	
+}
+
+
+// --My function library--end--line--
+//---------------------------------------------------------------------------
+__fastcall TForm4::TForm4(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+// generate graph  button
+void __fastcall TForm4::Button1Click(TObject *Sender)
+{
+	 n = StrToInt(Edit1->Text);
+	 int range = StrToInt(Edit2->Text);
+	 int max_range = StrToInt(Edit3->Text);
+	 int LargeInt = StrToInt(Edit4->Text);
+
+	 generate_graph(n, range, max_range, LargeInt);
+	 String_grid_matrix();
+
+}
+//---------------------------------------------------------------------------
+
+// SSAD button
+void __fastcall TForm4::Button3Click(TObject *Sender)
+{
+	 int source = StrToInt(Edit5->Text);
+	 SSAD(source);
+}
+//---------------------------------------------------------------------------
+
+// all pairs
+void __fastcall TForm4::Button4Click(TObject *Sender)
+{
+	 floyd_warshall();
+}
+//---------------------------------------------------------------------------
+
